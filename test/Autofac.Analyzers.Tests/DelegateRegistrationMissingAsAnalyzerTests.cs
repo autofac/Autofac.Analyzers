@@ -37,7 +37,7 @@ namespace Autofac.Analyzers.Tests
         }
     }";
             var expected = Diagnostic(Descriptors.Autofac1000_DelegateRegistrationNeedsAs)
-                                      .WithLocation(11, 15);
+                                      .WithLocation(14, 17);
 
             await Verify(test, expected);
         }
@@ -85,6 +85,104 @@ namespace Autofac.Analyzers.Tests
             {
                 var builder = new ContainerBuilder();
                 var tracked = builder.Register(c => new TestClass());
+
+                tracked = tracked.SingleInstance();
+
+                tracked.As<ITestService>();
+            }
+        }
+    }";
+            await Verify(test);
+        }
+
+        [Fact]
+        public async Task CanRaiseIssueWithFirstReAssignedBuilder()
+        {
+            var test = @"
+    using Autofac;
+
+    namespace MyAutofacApp
+    {
+        class Test
+        {
+            interface ITestService {}
+
+            class TestClass {}
+
+            void Run()
+            {
+                var builder = new ContainerBuilder();
+                var tracked = builder.Register(c => new TestClass());
+
+                tracked = tracked.SingleInstance();
+
+                tracked = builder.Register(c => new TestClass());
+
+                tracked.SingleInstance().As<ITestService>();
+            }
+        }
+    }";
+
+            var expected = Diagnostic(Descriptors.Autofac1000_DelegateRegistrationNeedsAs)
+                                      .WithLocation(15, 31);
+
+            await Verify(test, expected);
+        }
+
+        [Fact]
+        public async Task CanRaiseIssueWithSecondReAssignedBuilder()
+        {
+            var test = @"
+    using Autofac;
+
+    namespace MyAutofacApp
+    {
+        class Test
+        {
+            interface ITestService {}
+
+            class TestClass {}
+
+            void Run()
+            {
+                var builder = new ContainerBuilder();
+                var tracked = builder.Register(c => new TestClass()).As<ITestService>();
+
+                tracked = tracked.SingleInstance();
+
+                tracked = builder.Register(c => new TestClass());
+
+                tracked.SingleInstance();
+            }
+        }
+    }";
+
+            var expected = Diagnostic(Descriptors.Autofac1000_DelegateRegistrationNeedsAs)
+                                      .WithLocation(19, 27);
+
+            await Verify(test, expected);
+        }
+
+        [Fact]
+        public async Task CanTrackReAssignedBuilder()
+        {
+            var test = @"
+    using Autofac;
+
+    namespace MyAutofacApp
+    {
+        class Test
+        {
+            interface ITestService {}
+
+            class TestClass {}
+
+            void Run()
+            {
+                var builder = new ContainerBuilder();
+                var tracked = builder.Register(c => new TestClass()).As<ITestService>();
+
+                tracked = builder.Register(c => new TestClass());
 
                 tracked.As<ITestService>();
             }
