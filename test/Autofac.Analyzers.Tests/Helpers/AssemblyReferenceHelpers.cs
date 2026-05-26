@@ -1,9 +1,9 @@
-﻿using Microsoft.CodeAnalysis;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Microsoft.CodeAnalysis;
 
 namespace Autofac.Analyzers.Tests.Helpers
 {
@@ -27,10 +27,9 @@ namespace Autofac.Analyzers.Tests.Helpers
 #endif
         }
 
-        static PortableExecutableReference GetAssemblyReference(IEnumerable<AssemblyName> assemblies, string name)
+        private static PortableExecutableReference GetAssemblyReference(IEnumerable<AssemblyName> assemblies, string name)
         {
             return MetadataReference.CreateFromFile(Assembly.Load(assemblies.First(n => n.Name == name)).Location);
         }
     }
-
 }

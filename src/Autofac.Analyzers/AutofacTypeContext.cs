@@ -1,14 +1,14 @@
-﻿using Microsoft.CodeAnalysis;
-using System;
+﻿using System;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 
 namespace Autofac.Analyzers
 {
     public class AutofacTypeContext
     {
-        const string ContainerBuilderName = "Autofac.ContainerBuilder";
-        const string RegistrationExtensionsName = "Autofac.RegistrationExtensions";
-        const string RegistrationBuilderInterfaceName = "Autofac.Builder.IRegistrationBuilder`3";
+        private const string ContainerBuilderName = "Autofac.ContainerBuilder";
+        private const string RegistrationExtensionsName = "Autofac.RegistrationExtensions";
+        private const string RegistrationBuilderInterfaceName = "Autofac.Builder.IRegistrationBuilder`3";
 
         private class ExtensionMethodName
         {
@@ -18,15 +18,21 @@ namespace Autofac.Analyzers
                 Predicate = predicate;
             }
 
-            public string Simple { get; }
+            public string Simple
+            {
+                get;
+            }
 
-            public Func<IMethodSymbol> Predicate { get; }
+            public Func<IMethodSymbol> Predicate
+            {
+                get;
+            }
         }
 
-        private Lazy<INamedTypeSymbol> containerBuilderType;
-        private Lazy<INamedTypeSymbol> registrationExtensionsType;
-        private Lazy<INamedTypeSymbol> registrationBuilderInterface;
-        private Lazy<IModuleSymbol> autofacModule;
+        private readonly Lazy<INamedTypeSymbol> containerBuilderType;
+        private readonly Lazy<INamedTypeSymbol> registrationExtensionsType;
+        private readonly Lazy<INamedTypeSymbol> registrationBuilderInterface;
+        private readonly Lazy<IModuleSymbol> autofacModule;
 
         public AutofacTypeContext(Compilation compileContext)
         {

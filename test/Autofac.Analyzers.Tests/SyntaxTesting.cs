@@ -5,13 +5,17 @@ using System.Text;
 namespace Autofac.Analyzers.Test
 {
     // Syntax experiments for browsing the syntax tree!
-    class SyntaxExperiments
+    internal class SyntaxExperiments
     {
-        interface ITestService { }
+        private interface ITestService
+        {
+        }
 
-        class TestClass { }
+        private class TestClass
+        {
+        }
 
-        void Run()
+        private void Run()
         {
             var builder = new ContainerBuilder();
             var tracked = builder.Register(c => new TestClass()).As<ITestService>();

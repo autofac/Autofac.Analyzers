@@ -1,8 +1,8 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Collections.Immutable;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using System.Collections.Immutable;
 
 namespace Autofac.Analyzers
 {
@@ -14,7 +14,10 @@ namespace Autofac.Analyzers
             SupportedDiagnostics = ImmutableArray.Create(diagnostic);
         }
 
-        public sealed override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
+        public sealed override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
+        {
+            get;
+        }
 
         public override void Initialize(AnalysisContext context)
         {
@@ -27,27 +30,27 @@ namespace Autofac.Analyzers
 
                 compilationStartCtxt.RegisterSyntaxNodeAction(nodeContext =>
                 {
-                    var invocation = (InvocationExpressionSyntax) nodeContext.Node;
+                    var invocation = (InvocationExpressionSyntax)nodeContext.Node;
 
                     var symbolInfo = nodeContext.SemanticModel.GetSymbolInfo(invocation, nodeContext.CancellationToken);
                     if (symbolInfo.Symbol?.Kind != SymbolKind.Method)
                         return;
 
                     // We're looking for any methods where the first argument is a ContainerBuilder,
-                    // or the ReducedFrom first argument. 
-                   
+                    // or the ReducedFrom first argument.
+
                     var methodSymbol = (IMethodSymbol)symbolInfo.Symbol;
 
-                    if(methodSymbol.ReducedFrom is object)
+                    if (methodSymbol.ReducedFrom is object)
                     {
                         methodSymbol = methodSymbol.ReducedFrom;
                     }
 
-                    if(methodSymbol.Parameters.Length > 0)
+                    if (methodSymbol.Parameters.Length > 0)
                     {
                         var firstParam = methodSymbol.Parameters[0];
 
-                        if(firstParam.Type is INamedTypeSymbol namedSymbol &&
+                        if (firstParam.Type is INamedTypeSymbol namedSymbol &&
                            SymbolEqualityComparer.Default.Equals(namedSymbol, autofacTypeContext.ContainerBuilder))
                         {
                             // This is a registration method that jumps directly off
@@ -65,7 +68,6 @@ namespace Autofac.Analyzers
                             Analyze(registrationContext);
                         }
                     }
-
                 }, SyntaxKind.InvocationExpression);
             });
         }
