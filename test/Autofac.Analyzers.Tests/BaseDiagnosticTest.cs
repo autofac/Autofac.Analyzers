@@ -1,10 +1,10 @@
-﻿using Autofac.Analyzers.Tests.Helpers;
+﻿using System.Threading.Tasks;
+using Autofac.Analyzers.Tests.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.CodeAnalysis.Testing.Verifiers;
-using System.Threading.Tasks;
 
 namespace Autofac.Analyzers.Tests
 {
@@ -31,8 +31,10 @@ namespace Autofac.Analyzers.Tests
 
         public async Task Verify(string source, params DiagnosticResult[] diagnostics)
         {
-            var test = new Test();
-            test.TestCode = source;
+            var test = new Test
+            {
+                TestCode = source
+            };
             test.ExpectedDiagnostics.AddRange(diagnostics);
 
             await test.RunAsync();

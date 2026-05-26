@@ -1,8 +1,8 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Collections;
+using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace Autofac.Analyzers
 {
@@ -14,12 +14,18 @@ namespace Autofac.Analyzers
             Invocation = invocation;
         }
 
-        public IMethodSymbol InvokedMethod { get; }
-        public InvocationExpressionSyntax Invocation { get; }
+        public IMethodSymbol InvokedMethod
+        {
+            get;
+        }
+        public InvocationExpressionSyntax Invocation
+        {
+            get;
+        }
     }
 
 
-    class RegistrationBuilderExpressionEnumerator : IEnumerator<RegistrationBuilderInvocationContext>
+    internal class RegistrationBuilderExpressionEnumerator : IEnumerator<RegistrationBuilderInvocationContext>
     {
         private readonly RegistrationSyntaxContext registrationContext;
 
@@ -41,7 +47,7 @@ namespace Autofac.Analyzers
         {
             // Moving to the next registration builder call involves:
             //  - Looking at the parent expression.
-            if(currentInvocationExpression == null)
+            if (currentInvocationExpression == null)
             {
                 currentInvocationExpression = registrationContext.RootInvocationSyntax;
             }
@@ -70,13 +76,13 @@ namespace Autofac.Analyzers
                         }
                     }
                 }
-                else if(nextParent is LocalDeclarationStatementSyntax localDeclareSyntax)
+                else if (nextParent is LocalDeclarationStatementSyntax localDeclareSyntax)
                 {
                     // The registration has been assigned to a variable.
                     // If the variable is a registration builder, then follow it.
                     var variableAssignment = localDeclareSyntax.Declaration.Variables.FirstOrDefault();
                     var declaredSymbol = registrationContext.SemanticModel.GetDeclaredSymbol(variableAssignment) as ILocalSymbol;
-                    
+
                     // Remember the tracking symbol.
                     trackingSymbol = declaredSymbol;
 
@@ -85,12 +91,12 @@ namespace Autofac.Analyzers
                     // Next parent.
                     nextParent = GetNextStartSearchNode();
                 }
-                else if(nextParent is AssignmentExpressionSyntax assignment)
+                else if (nextParent is AssignmentExpressionSyntax assignment)
                 {
                     // If we assign the value to a variable, we need to make that target variable the tracking target.
                     var assignToSymbol = registrationContext.SemanticModel.GetSymbolInfo(assignment.Left);
 
-                    if(assignToSymbol.Symbol is ILocalSymbol newLocal)
+                    if (assignToSymbol.Symbol is ILocalSymbol newLocal)
                     {
                         // Track it.
                         trackingSymbol = newLocal;
@@ -106,7 +112,7 @@ namespace Autofac.Analyzers
                         break;
                     }
                 }
-                else if(nextParent is ExpressionStatementSyntax)
+                else if (nextParent is ExpressionStatementSyntax)
                 {
                     if (trackingSymbol is object)
                     {
@@ -119,14 +125,14 @@ namespace Autofac.Analyzers
                         break;
                     }
                 }
-                else if(nextParent is BlockSyntax)
+                else if (nextParent is BlockSyntax)
                 {
                     // Reached the code block.
                     // Nothing to do.
                     break;
                 }
 
-                if(nextParent is null)
+                if (nextParent is null)
                 {
                     break;
                 }
@@ -139,7 +145,7 @@ namespace Autofac.Analyzers
 
         private void PopulateCodeBlockWalker(SyntaxNode nextParent)
         {
-            if(blockWalkingEnumerator is null)
+            if (blockWalkingEnumerator is null)
             {
                 // Get the containing code block.
                 var codeBlock = nextParent.FirstAncestorOrSelf<BlockSyntax>();
@@ -158,7 +164,7 @@ namespace Autofac.Analyzers
         {
             var assigningToTracker = false;
 
-            while(blockWalkingEnumerator.MoveNext())
+            while (blockWalkingEnumerator.MoveNext())
             {
                 var current = blockWalkingEnumerator.Current;
 
@@ -183,7 +189,7 @@ namespace Autofac.Analyzers
                         // We can start searching from here.
                         return accessExpr;
                     }
-                    else if(assigningToTracker)
+                    else if (assigningToTracker)
                     {
                         return null;
                     }
@@ -199,7 +205,7 @@ namespace Autofac.Analyzers
             // will be on a type constructed from that interface.
             var constructedFrom = methodSymbol.ContainingType.ConstructedFrom;
 
-            if(constructedFrom.Equals(registrationContext.AutofacTypes.RegistrationBuilderInterface,
+            if (constructedFrom.Equals(registrationContext.AutofacTypes.RegistrationBuilderInterface,
                                       SymbolEqualityComparer.Default))
             {
                 return true;

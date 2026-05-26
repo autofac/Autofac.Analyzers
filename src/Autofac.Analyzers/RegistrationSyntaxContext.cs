@@ -1,10 +1,10 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Diagnostics;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Autofac.Analyzers
 {
@@ -27,13 +27,25 @@ namespace Autofac.Analyzers
 
         public CancellationToken CancellationToken => analysisContext.CancellationToken;
 
-        public IMethodSymbol RootRegistrationMethod { get; }
+        public IMethodSymbol RootRegistrationMethod
+        {
+            get;
+        }
 
-        public InvocationExpressionSyntax RootInvocationSyntax { get; }
+        public InvocationExpressionSyntax RootInvocationSyntax
+        {
+            get;
+        }
 
-        public AutofacTypeContext AutofacTypes { get; }
+        public AutofacTypeContext AutofacTypes
+        {
+            get;
+        }
 
-        public IEnumerable<RegistrationBuilderInvocationContext> BuilderCalls { get; }
+        public IEnumerable<RegistrationBuilderInvocationContext> BuilderCalls
+        {
+            get;
+        }
 
         public void ReportDiagnostic(Diagnostic diagnostic)
         {

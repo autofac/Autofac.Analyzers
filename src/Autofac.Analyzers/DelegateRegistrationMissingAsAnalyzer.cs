@@ -11,7 +11,7 @@ namespace Autofac.Analyzers
     {
         private const string DelegateRegistrationMethodNames = "Register";
 
-        public DelegateRegistrationMissingAsAnalyzer() 
+        public DelegateRegistrationMissingAsAnalyzer()
             : base(Descriptors.Autofac1000_DelegateRegistrationNeedsAs)
         {
         }
@@ -20,11 +20,11 @@ namespace Autofac.Analyzers
         {
             // Check if the method is a delegate register method.
 
-            if(registrationContext.RootRegistrationMethod.Name == DelegateRegistrationMethodNames)
+            if (registrationContext.RootRegistrationMethod.Name == DelegateRegistrationMethodNames)
             {
                 // This is a delegate registration; now we need to walk back up the expression tree
                 // to find any As<> methods.
-                if(!registrationContext.BuilderCalls.Any(c => c.InvokedMethod.Name == "As"))
+                if (!registrationContext.BuilderCalls.Any(c => c.InvokedMethod.Name == "As"))
                 {
                     // No 'As' method in the registration.
                     registrationContext.ReportDiagnostic(
