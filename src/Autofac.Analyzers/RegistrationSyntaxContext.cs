@@ -10,7 +10,7 @@ namespace Autofac.Analyzers
 {
 
 
-    public class RegistrationSyntaxContext
+    public sealed class RegistrationSyntaxContext
     {
         private readonly SyntaxNodeAnalysisContext analysisContext;
 
@@ -57,7 +57,7 @@ namespace Autofac.Analyzers
             return RootInvocationSyntax.GetLocation();
         }
 
-        private class EnumerableRegistrationCalls : IEnumerable<RegistrationBuilderInvocationContext>
+        private sealed class EnumerableRegistrationCalls : IEnumerable<RegistrationBuilderInvocationContext>
         {
             private readonly RegistrationSyntaxContext registrationSyntaxContext;
 

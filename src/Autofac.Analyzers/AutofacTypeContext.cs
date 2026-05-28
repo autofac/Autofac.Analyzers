@@ -4,13 +4,13 @@ using Microsoft.CodeAnalysis;
 
 namespace Autofac.Analyzers
 {
-    public class AutofacTypeContext
+    public sealed class AutofacTypeContext
     {
         private const string ContainerBuilderName = "Autofac.ContainerBuilder";
         private const string RegistrationExtensionsName = "Autofac.RegistrationExtensions";
         private const string RegistrationBuilderInterfaceName = "Autofac.Builder.IRegistrationBuilder`3";
 
-        private class ExtensionMethodName
+        private sealed class ExtensionMethodName
         {
             public ExtensionMethodName(string simple, Func<IMethodSymbol> predicate = null)
             {
