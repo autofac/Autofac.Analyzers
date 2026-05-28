@@ -19,19 +19,15 @@ namespace Autofac.Analyzers
         protected override void Analyze(RegistrationSyntaxContext registrationContext)
         {
             // Check if the method is a delegate register method.
-
-            if (registrationContext.RootRegistrationMethod.Name == DelegateRegistrationMethodNames)
+            // This is a delegate registration; now we need to walk back up the expression tree
+            // to find any As<> methods.
+            if (registrationContext.RootRegistrationMethod.Name == DelegateRegistrationMethodNames && !registrationContext.BuilderCalls.Any(c => c.InvokedMethod.Name == "As"))
             {
-                // This is a delegate registration; now we need to walk back up the expression tree
-                // to find any As<> methods.
-                if (!registrationContext.BuilderCalls.Any(c => c.InvokedMethod.Name == "As"))
-                {
-                    // No 'As' method in the registration.
-                    registrationContext.ReportDiagnostic(
-                        Diagnostic.Create(
-                            Descriptors.Autofac1000_DelegateRegistrationNeedsAs,
-                            registrationContext.GetRegistrationLocation()));
-                }
+                // No 'As' method in the registration.
+                registrationContext.ReportDiagnostic(
+                    Diagnostic.Create(
+                        Descriptors.Autofac1000_DelegateRegistrationNeedsAs,
+                        registrationContext.GetRegistrationLocation()));
             }
         }
     }
