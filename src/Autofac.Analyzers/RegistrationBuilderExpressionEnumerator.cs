@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -57,79 +58,11 @@ namespace Autofac.Analyzers
             // We want to walk up the expression tree, and depending on the parent, we will do different things.
             while (nextParent is object)
             {
-                // If we've hit an invocation expression, lets inspect the method.
-                // A method that takes an IRegistrationBuilder of some form will be considered.
-                if (nextParent is InvocationExpressionSyntax invocExpr)
+                var result = ProcessParentNode(ref nextParent);
+
+                if (result.HasValue)
                 {
-                    var symbolInfo = _registrationContext.SemanticModel.GetSymbolInfo(invocExpr, _registrationContext.CancellationToken);
-
-                    // We're calling a method. Check if it takes a registration builder as the first parameter.
-                    if (symbolInfo.Symbol?.Kind == SymbolKind.Method)
-                    {
-                        var methodSymbol = (IMethodSymbol)symbolInfo.Symbol;
-
-                        if (TestForRegistrationBuilder(methodSymbol))
-                        {
-                            _currentInvocationExpression = invocExpr;
-                            _currentInvocationContext = new RegistrationBuilderInvocationContext(methodSymbol, invocExpr);
-                            return true;
-                        }
-                    }
-                }
-                else if (nextParent is LocalDeclarationStatementSyntax localDeclareSyntax)
-                {
-                    // The registration has been assigned to a variable.
-                    // If the variable is a registration builder, then follow it.
-                    var variableAssignment = localDeclareSyntax.Declaration.Variables.FirstOrDefault();
-                    var declaredSymbol = _registrationContext.SemanticModel.GetDeclaredSymbol(variableAssignment) as ILocalSymbol;
-
-                    // Remember the tracking symbol.
-                    _trackingSymbol = declaredSymbol;
-
-                    PopulateCodeBlockWalker(nextParent);
-
-                    // Next parent.
-                    nextParent = GetNextStartSearchNode();
-                }
-                else if (nextParent is AssignmentExpressionSyntax assignment)
-                {
-                    // If we assign the value to a variable, we need to make that target variable the tracking target.
-                    var assignToSymbol = _registrationContext.SemanticModel.GetSymbolInfo(assignment.Left);
-
-                    if (assignToSymbol.Symbol is ILocalSymbol newLocal)
-                    {
-                        // Track it.
-                        _trackingSymbol = newLocal;
-
-                        PopulateCodeBlockWalker(nextParent);
-
-                        nextParent = GetNextStartSearchNode();
-                    }
-                    else
-                    {
-                        // The registration builder is being assigned to something other than a
-                        // local variable. We can't track it anymore.
-                        break;
-                    }
-                }
-                else if (nextParent is ExpressionStatementSyntax)
-                {
-                    if (_trackingSymbol is object)
-                    {
-                        // We're tracking something; we can keep going.
-                        nextParent = GetNextStartSearchNode();
-                    }
-                    else
-                    {
-                        // Reached a standalone expression statement. We are done.
-                        break;
-                    }
-                }
-                else if (nextParent is BlockSyntax)
-                {
-                    // Reached the code block.
-                    // Nothing to do.
-                    break;
+                    return result.Value;
                 }
 
                 if (nextParent is null)
@@ -138,6 +71,116 @@ namespace Autofac.Analyzers
                 }
 
                 nextParent = nextParent.Parent;
+            }
+
+            return false;
+        }
+
+        private bool? ProcessParentNode(ref SyntaxNode nextParent)
+        {
+            // If we've hit an invocation expression, lets inspect the method.
+            // A method that takes an IRegistrationBuilder of some form will be considered.
+            if (nextParent is InvocationExpressionSyntax invocExpr)
+            {
+                if (TryHandleInvocationExpression(invocExpr))
+                {
+                    return true;
+                }
+            }
+            else if (nextParent is LocalDeclarationStatementSyntax localDeclareSyntax)
+            {
+                // The registration has been assigned to a variable.
+                // If the variable is a registration builder, then follow it.
+                HandleLocalDeclaration(localDeclareSyntax, ref nextParent);
+            }
+            else if (nextParent is AssignmentExpressionSyntax assignment)
+            {
+                // If we assign the value to a variable, we need to make that target variable the tracking target.
+                if (!HandleAssignment(assignment, ref nextParent))
+                {
+                    // The registration builder is being assigned to something other than a
+                    // local variable. We can't track it anymore.
+                    return false;
+                }
+            }
+            else if (nextParent is ExpressionStatementSyntax)
+            {
+                if (!HandleExpressionStatement(ref nextParent))
+                {
+                    // Reached a standalone expression statement. We are done.
+                    return false;
+                }
+            }
+            else if (nextParent is BlockSyntax)
+            {
+                // Reached the code block. Nothing to do.
+                return false;
+            }
+
+            return null;
+        }
+
+        private bool TryHandleInvocationExpression(InvocationExpressionSyntax invocExpr)
+        {
+            var symbolInfo = _registrationContext.SemanticModel.GetSymbolInfo(invocExpr, _registrationContext.CancellationToken);
+
+            // We're calling a method. Check if it takes a registration builder as the first parameter.
+            if (symbolInfo.Symbol?.Kind != SymbolKind.Method)
+            {
+                return false;
+            }
+
+            var methodSymbol = (IMethodSymbol)symbolInfo.Symbol;
+
+            if (!TestForRegistrationBuilder(methodSymbol))
+            {
+                return false;
+            }
+
+            _currentInvocationExpression = invocExpr;
+            _currentInvocationContext = new RegistrationBuilderInvocationContext(methodSymbol, invocExpr);
+            return true;
+        }
+
+        private void HandleLocalDeclaration(LocalDeclarationStatementSyntax localDeclareSyntax, ref SyntaxNode nextParent)
+        {
+            var variableAssignment = localDeclareSyntax.Declaration.Variables.FirstOrDefault();
+            var declaredSymbol = _registrationContext.SemanticModel.GetDeclaredSymbol(variableAssignment) as ILocalSymbol;
+
+            // Remember the tracking symbol.
+            _trackingSymbol = declaredSymbol;
+
+            PopulateCodeBlockWalker(localDeclareSyntax);
+
+            // Next parent.
+            nextParent = GetNextStartSearchNode();
+        }
+
+        private bool HandleAssignment(AssignmentExpressionSyntax assignment, ref SyntaxNode nextParent)
+        {
+            var assignToSymbol = _registrationContext.SemanticModel.GetSymbolInfo(assignment.Left);
+
+            if (assignToSymbol.Symbol is ILocalSymbol newLocal)
+            {
+                // Track it.
+                _trackingSymbol = newLocal;
+
+                PopulateCodeBlockWalker(assignment);
+
+                nextParent = GetNextStartSearchNode();
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleExpressionStatement(ref SyntaxNode nextParent)
+        {
+            if (_trackingSymbol is object)
+            {
+                // We're tracking something; we can keep going.
+                nextParent = GetNextStartSearchNode();
+                return true;
             }
 
             return false;
@@ -221,6 +264,16 @@ namespace Autofac.Analyzers
 
         public void Dispose()
         {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _blockWalkingEnumerator?.Dispose();
+            }
         }
     }
 }
