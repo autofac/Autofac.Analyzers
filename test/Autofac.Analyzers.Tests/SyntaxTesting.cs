@@ -20,13 +20,11 @@ namespace Autofac.Analyzers.Test
             var builder = new ContainerBuilder();
             var tracked = builder.Register(c => new TestClass()).As<ITestService>();
 
-            tracked = tracked.SingleInstance();
+            tracked.SingleInstance();
 
             tracked = builder.Register(c => new TestClass());
 
-
             tracked.SingleInstance();
-
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Autofac.Analyzers
 
     public abstract class BaseRegistrationAnalyzer : DiagnosticAnalyzer
     {
-        public BaseRegistrationAnalyzer(DiagnosticDescriptor diagnostic)
+        protected BaseRegistrationAnalyzer(DiagnosticDescriptor diagnostic)
         {
             SupportedDiagnostics = ImmutableArray.Create(diagnostic);
         }

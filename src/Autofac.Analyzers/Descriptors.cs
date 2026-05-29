@@ -30,7 +30,7 @@ namespace Autofac.Analyzers
             var title = new LocalizableResourceString(textName + "_Title", Resources.ResourceManager, typeof(Resources));
             var description = new LocalizableResourceString(textName + "_Description", Resources.ResourceManager, typeof(Resources));
 
-            // TODO: Needs to be created...
+            // This documentation needs to be created.
             var helpLink = $"https://autofac.readthedocs.io/en/latest/rules/{id}";
             var isEnabledByDefault = true;
             return new DiagnosticDescriptor(id, title, title, category.ToString(), defaultSeverity, isEnabledByDefault, description, helpLink);
