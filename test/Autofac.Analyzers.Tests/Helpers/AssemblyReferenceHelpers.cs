@@ -10,22 +10,11 @@ namespace Autofac.Analyzers.Tests.Helpers
     internal class AssemblyReferenceHelpers
     {
 #if NETCOREAPP
-        internal static readonly MetadataReference SystemRuntimeReference;
-        internal static readonly MetadataReference NetStandardReference;
+        internal static readonly MetadataReference SystemRuntimeReference = GetAssemblyReference(typeof(AssemblyReferenceHelpers).Assembly.GetReferencedAssemblies(), "System.Runtime");
+        internal static readonly MetadataReference NetStandardReference = GetAssemblyReference(typeof(ContainerBuilder).Assembly.GetReferencedAssemblies(), "netstandard");
 #endif
 
         internal static readonly MetadataReference AutofacReference = MetadataReference.CreateFromFile(typeof(ContainerBuilder).Assembly.Location);
-
-        static AssemblyReferenceHelpers()
-        {
-            var testAssemblies = typeof(AssemblyReferenceHelpers).Assembly.GetReferencedAssemblies();
-            var autofacAssemblies = typeof(ContainerBuilder).Assembly.GetReferencedAssemblies();
-#if NETCOREAPP
-            SystemRuntimeReference = GetAssemblyReference(testAssemblies, "System.Runtime");
-            NetStandardReference = GetAssemblyReference(autofacAssemblies, "netstandard");
-            //	SystemRuntimeExtensionsReference = GetAssemblyReference(referencedAssemblies, "System.Runtime.Extensions");
-#endif
-        }
 
         private static PortableExecutableReference GetAssemblyReference(IEnumerable<AssemblyName> assemblies, string name)
         {

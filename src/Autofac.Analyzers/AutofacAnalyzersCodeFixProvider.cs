@@ -18,7 +18,7 @@ namespace Autofac.Analyzers
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(AutofacAnalyzersCodeFixProvider)), Shared]
     public class AutofacAnalyzersCodeFixProvider : CodeFixProvider
     {
-        private const string title = "Make uppercase";
+        private const string Title = "Make uppercase";
 
         public sealed override ImmutableArray<string> FixableDiagnosticIds
         {
@@ -38,7 +38,7 @@ namespace Autofac.Analyzers
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
-            // TODO: Replace the following code with your own analysis, generating a CodeAction for each fix to suggest
+            // Replace the following code with your own analysis, generating a CodeAction for each fix to suggest
             var diagnostic = context.Diagnostics.First();
             var diagnosticSpan = diagnostic.Location.SourceSpan;
 
@@ -48,13 +48,13 @@ namespace Autofac.Analyzers
             // Register a code action that will invoke the fix.
             context.RegisterCodeFix(
                 CodeAction.Create(
-                    title: title,
+                    title: Title,
                     createChangedSolution: c => MakeUppercaseAsync(context.Document, declaration, c),
-                    equivalenceKey: title),
+                    equivalenceKey: Title),
                 diagnostic);
         }
 
-        private async Task<Solution> MakeUppercaseAsync(Document document, TypeDeclarationSyntax typeDecl, CancellationToken cancellationToken)
+        private static async Task<Solution> MakeUppercaseAsync(Document document, TypeDeclarationSyntax typeDecl, CancellationToken cancellationToken)
         {
             // Compute new uppercase name.
             var identifierToken = typeDecl.Identifier;

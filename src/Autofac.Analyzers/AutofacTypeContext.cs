@@ -4,50 +4,31 @@ using Microsoft.CodeAnalysis;
 
 namespace Autofac.Analyzers
 {
-    public class AutofacTypeContext
+    public sealed class AutofacTypeContext
     {
         private const string ContainerBuilderName = "Autofac.ContainerBuilder";
         private const string RegistrationExtensionsName = "Autofac.RegistrationExtensions";
         private const string RegistrationBuilderInterfaceName = "Autofac.Builder.IRegistrationBuilder`3";
 
-        private class ExtensionMethodName
-        {
-            public ExtensionMethodName(string simple, Func<IMethodSymbol> predicate = null)
-            {
-                Simple = simple;
-                Predicate = predicate;
-            }
-
-            public string Simple
-            {
-                get;
-            }
-
-            public Func<IMethodSymbol> Predicate
-            {
-                get;
-            }
-        }
-
-        private readonly Lazy<INamedTypeSymbol> containerBuilderType;
-        private readonly Lazy<INamedTypeSymbol> registrationExtensionsType;
-        private readonly Lazy<INamedTypeSymbol> registrationBuilderInterface;
-        private readonly Lazy<IModuleSymbol> autofacModule;
+        private readonly Lazy<INamedTypeSymbol> _containerBuilderType;
+        private readonly Lazy<INamedTypeSymbol> _registrationExtensionsType;
+        private readonly Lazy<INamedTypeSymbol> _registrationBuilderInterface;
+        private readonly Lazy<IModuleSymbol> _autofacModule;
 
         public AutofacTypeContext(Compilation compileContext)
         {
-            containerBuilderType = new Lazy<INamedTypeSymbol>(() => compileContext.GetTypeByMetadataName(ContainerBuilderName));
-            registrationExtensionsType = new Lazy<INamedTypeSymbol>(() => compileContext.GetTypeByMetadataName(RegistrationExtensionsName));
-            registrationBuilderInterface = new Lazy<INamedTypeSymbol>(() => compileContext.GetTypeByMetadataName(RegistrationBuilderInterfaceName));
-            autofacModule = new Lazy<IModuleSymbol>(() => ContainerBuilder.ContainingModule);
+            _containerBuilderType = new Lazy<INamedTypeSymbol>(() => compileContext.GetTypeByMetadataName(ContainerBuilderName));
+            _registrationExtensionsType = new Lazy<INamedTypeSymbol>(() => compileContext.GetTypeByMetadataName(RegistrationExtensionsName));
+            _registrationBuilderInterface = new Lazy<INamedTypeSymbol>(() => compileContext.GetTypeByMetadataName(RegistrationBuilderInterfaceName));
+            _autofacModule = new Lazy<IModuleSymbol>(() => ContainerBuilder.ContainingModule);
         }
 
-        public INamedTypeSymbol ContainerBuilder => containerBuilderType.Value;
+        public INamedTypeSymbol ContainerBuilder => _containerBuilderType.Value;
 
-        public INamedTypeSymbol RegistrationExtensions => registrationExtensionsType.Value;
+        public INamedTypeSymbol RegistrationExtensions => _registrationExtensionsType.Value;
 
-        public INamedTypeSymbol RegistrationBuilderInterface => registrationBuilderInterface.Value;
+        public INamedTypeSymbol RegistrationBuilderInterface => _registrationBuilderInterface.Value;
 
-        public IModuleSymbol AutofacModule => autofacModule.Value;
+        public IModuleSymbol AutofacModule => _autofacModule.Value;
     }
 }
