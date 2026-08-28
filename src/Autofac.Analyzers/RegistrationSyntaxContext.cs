@@ -1,80 +1,77 @@
-﻿using System;
+﻿// Copyright (c) Autofac Project. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Collections;
-using System.Collections.Generic;
-using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace Autofac.Analyzers
+namespace Autofac.Analyzers;
+
+public sealed class RegistrationSyntaxContext
 {
+    private readonly SyntaxNodeAnalysisContext analysisContext;
 
-
-    public sealed class RegistrationSyntaxContext
+    public RegistrationSyntaxContext(SyntaxNodeAnalysisContext nodeContext, IMethodSymbol methodSymbol, InvocationExpressionSyntax invocation, AutofacTypeContext types)
     {
-        private readonly SyntaxNodeAnalysisContext analysisContext;
+        this.analysisContext = nodeContext;
+        this.RootRegistrationMethod = methodSymbol;
+        RootInvocationSyntax = invocation;
+        AutofacTypes = types;
+        BuilderCalls = new EnumerableRegistrationCalls(this);
+    }
 
-        public RegistrationSyntaxContext(SyntaxNodeAnalysisContext nodeContext, IMethodSymbol methodSymbol, InvocationExpressionSyntax invocation, AutofacTypeContext types)
+    public SemanticModel SemanticModel => analysisContext.SemanticModel;
+
+    public CancellationToken CancellationToken => analysisContext.CancellationToken;
+
+    public IMethodSymbol RootRegistrationMethod
+    {
+        get;
+    }
+
+    public InvocationExpressionSyntax RootInvocationSyntax
+    {
+        get;
+    }
+
+    public AutofacTypeContext AutofacTypes
+    {
+        get;
+    }
+
+    public IEnumerable<RegistrationBuilderInvocationContext> BuilderCalls
+    {
+        get;
+    }
+
+    public void ReportDiagnostic(Diagnostic diagnostic)
+    {
+        analysisContext.ReportDiagnostic(diagnostic);
+    }
+
+    public Location GetRegistrationLocation()
+    {
+        return RootInvocationSyntax.GetLocation();
+    }
+
+    private sealed class EnumerableRegistrationCalls : IEnumerable<RegistrationBuilderInvocationContext>
+    {
+        private readonly RegistrationSyntaxContext registrationSyntaxContext;
+
+        public EnumerableRegistrationCalls(RegistrationSyntaxContext registrationSyntaxContext)
         {
-            this.analysisContext = nodeContext;
-            this.RootRegistrationMethod = methodSymbol;
-            RootInvocationSyntax = invocation;
-            AutofacTypes = types;
-            BuilderCalls = new EnumerableRegistrationCalls(this);
+            this.registrationSyntaxContext = registrationSyntaxContext;
         }
 
-        public SemanticModel SemanticModel => analysisContext.SemanticModel;
-
-        public CancellationToken CancellationToken => analysisContext.CancellationToken;
-
-        public IMethodSymbol RootRegistrationMethod
+        public IEnumerator<RegistrationBuilderInvocationContext> GetEnumerator()
         {
-            get;
+            return new RegistrationBuilderExpressionEnumerator(registrationSyntaxContext);
         }
 
-        public InvocationExpressionSyntax RootInvocationSyntax
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            get;
-        }
-
-        public AutofacTypeContext AutofacTypes
-        {
-            get;
-        }
-
-        public IEnumerable<RegistrationBuilderInvocationContext> BuilderCalls
-        {
-            get;
-        }
-
-        public void ReportDiagnostic(Diagnostic diagnostic)
-        {
-            analysisContext.ReportDiagnostic(diagnostic);
-        }
-
-        public Location GetRegistrationLocation()
-        {
-            return RootInvocationSyntax.GetLocation();
-        }
-
-        private sealed class EnumerableRegistrationCalls : IEnumerable<RegistrationBuilderInvocationContext>
-        {
-            private readonly RegistrationSyntaxContext registrationSyntaxContext;
-
-            public EnumerableRegistrationCalls(RegistrationSyntaxContext registrationSyntaxContext)
-            {
-                this.registrationSyntaxContext = registrationSyntaxContext;
-            }
-
-            public IEnumerator<RegistrationBuilderInvocationContext> GetEnumerator()
-            {
-                return new RegistrationBuilderExpressionEnumerator(registrationSyntaxContext);
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return new RegistrationBuilderExpressionEnumerator(registrationSyntaxContext);
-            }
+            return new RegistrationBuilderExpressionEnumerator(registrationSyntaxContext);
         }
     }
 }

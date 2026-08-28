@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿// Copyright (c) Autofac Project. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using Autofac.Analyzers.Tests.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
@@ -6,59 +8,63 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.CodeAnalysis.Testing.Verifiers;
 
-namespace Autofac.Analyzers.Tests
+namespace Autofac.Analyzers.Tests;
+
+/// <summary>
+/// Superclass of all Unit Tests for DiagnosticAnalyzers.
+/// </summary>
+public class BaseDiagnosticTest<TAnalyzer>
+    where TAnalyzer : DiagnosticAnalyzer, new()
 {
-    /// <summary>
-    /// Superclass of all Unit Tests for DiagnosticAnalyzers
-    /// </summary>
-    public class BaseDiagnosticTest<TAnalyzer>
-        where TAnalyzer : DiagnosticAnalyzer, new()
+    [Obsolete]
+    protected DiagnosticResult Diagnostic()
     {
-        protected DiagnosticResult Diagnostic()
-        {
-            return CSharpCodeFixVerifier<TAnalyzer, EmptyCodeFixProvider, XUnitVerifier>.Diagnostic();
-        }
+        return CSharpCodeFixVerifier<TAnalyzer, EmptyCodeFixProvider, XUnitVerifier>.Diagnostic();
+    }
 
-        protected DiagnosticResult Diagnostic(string diagnosticId)
-        {
-            return CSharpCodeFixVerifier<TAnalyzer, EmptyCodeFixProvider, XUnitVerifier>.Diagnostic(diagnosticId);
-        }
+    [Obsolete]
+    protected DiagnosticResult Diagnostic(string diagnosticId)
+    {
+        return CSharpCodeFixVerifier<TAnalyzer, EmptyCodeFixProvider, XUnitVerifier>.Diagnostic(diagnosticId);
+    }
 
-        protected DiagnosticResult Diagnostic(DiagnosticDescriptor descriptor)
-        {
-            return new DiagnosticResult(descriptor);
-        }
+    protected DiagnosticResult Diagnostic(DiagnosticDescriptor descriptor)
+    {
+        return new DiagnosticResult(descriptor);
+    }
 
-        public async Task Verify(string source, params DiagnosticResult[] diagnostics)
+    public async Task Verify(string source, params DiagnosticResult[] diagnostics)
+    {
+        var test = new Test
         {
-            var test = new Test
+            TestCode = source,
+        };
+        test.ExpectedDiagnostics.AddRange(diagnostics);
+
+        await test.RunAsync();
+    }
+
+    [Obsolete]
+    private class Test : CSharpCodeFixTest<TAnalyzer, EmptyCodeFixProvider, XUnitVerifier>
+    {
+        public Test()
+        {
+            SolutionTransforms.Add((solution, projId) =>
             {
-                TestCode = source
-            };
-            test.ExpectedDiagnostics.AddRange(diagnostics);
-
-            await test.RunAsync();
-        }
-
-        private class Test : CSharpCodeFixTest<TAnalyzer, EmptyCodeFixProvider, XUnitVerifier>
-        {
-            public Test()
-            {
-                SolutionTransforms.Add((solution, projId) =>
+                solution = solution.AddMetadataReferences(projId, new[]
                 {
-                    solution = solution.AddMetadataReferences(projId, new[] {
-                        AssemblyReferenceHelpers.SystemRuntimeReference,
-                        AssemblyReferenceHelpers.NetStandardReference,
-                        //AssemblyReferenceHelpers.SystemRuntimeExtensionsReference,
-                        AssemblyReferenceHelpers.AutofacReference
-                    });
+                    AssemblyReferenceHelpers.SystemRuntimeReference,
+                    AssemblyReferenceHelpers.NetStandardReference,
 
-                    return solution;
+                    // AssemblyReferenceHelpers.SystemRuntimeExtensionsReference,
+                    AssemblyReferenceHelpers.AutofacReference,
                 });
 
-                // xunit diagnostics are reported in both normal and generated code
-                TestBehaviors |= TestBehaviors.SkipGeneratedCodeCheck;
-            }
+                return solution;
+            });
+
+            // xunit diagnostics are reported in both normal and generated code
+            TestBehaviors |= TestBehaviors.SkipGeneratedCodeCheck;
         }
     }
 }

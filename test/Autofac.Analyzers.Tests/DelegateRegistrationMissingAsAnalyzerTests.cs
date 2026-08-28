@@ -1,25 +1,24 @@
-﻿using System.Threading.Tasks;
-using Xunit;
+﻿// Copyright (c) Autofac Project. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
-namespace Autofac.Analyzers.Tests
+namespace Autofac.Analyzers.Tests;
+
+public class DelegateRegistrationMissingAsAnalyzerTests : BaseDiagnosticTest<DelegateRegistrationMissingAsAnalyzer>
 {
-    public class DelegateRegistrationMissingAsAnalyzerTests : BaseDiagnosticTest<DelegateRegistrationMissingAsAnalyzer>
+    // No diagnostics expected to show up
+    [Fact]
+    public async Task EmptyContentNoDiagnostics()
     {
+        var test = @"";
 
-        //No diagnostics expected to show up
-        [Fact]
-        public async Task EmptyContentNoDiagnostics()
-        {
-            var test = @"";
+        await Verify(test);
+    }
 
-            await Verify(test);
-        }
-
-        //Diagnostic and CodeFix both triggered and checked for
-        [Fact]
-        public async Task RaisesDiagnosticForMissingCall()
-        {
-            var test = @"
+    // Diagnostic and CodeFix both triggered and checked for
+    [Fact]
+    public async Task RaisesDiagnosticForMissingCall()
+    {
+        var test = @"
     using Autofac;
 
     namespace MyAutofacApp
@@ -36,16 +35,16 @@ namespace Autofac.Analyzers.Tests
             }
         }
     }";
-            var expected = Diagnostic(Descriptors.Autofac1000_DelegateRegistrationNeedsAs)
-                                      .WithLocation(14, 17);
+        var expected = Diagnostic(Descriptors.Autofac1000_DelegateRegistrationNeedsAs)
+                                  .WithLocation(14, 17);
 
-            await Verify(test, expected);
-        }
+        await Verify(test, expected);
+    }
 
-        [Fact]
-        public async Task NoDiagnosticIfAsCallIsPresent()
-        {
-            var test = @"
+    [Fact]
+    public async Task NoDiagnosticIfAsCallIsPresent()
+    {
+        var test = @"
     using Autofac;
 
     namespace MyAutofacApp
@@ -63,14 +62,13 @@ namespace Autofac.Analyzers.Tests
             }
         }
     }";
-            await Verify(test);
-        }
+        await Verify(test);
+    }
 
-
-        [Fact]
-        public async Task CanTrackRegistrationObject()
-        {
-            var test = @"
+    [Fact]
+    public async Task CanTrackRegistrationObject()
+    {
+        var test = @"
     using Autofac;
 
     namespace MyAutofacApp
@@ -92,13 +90,13 @@ namespace Autofac.Analyzers.Tests
             }
         }
     }";
-            await Verify(test);
-        }
+        await Verify(test);
+    }
 
-        [Fact]
-        public async Task CanRaiseIssueWithFirstReAssignedBuilder()
-        {
-            var test = @"
+    [Fact]
+    public async Task CanRaiseIssueWithFirstReAssignedBuilder()
+    {
+        var test = @"
     using Autofac;
 
     namespace MyAutofacApp
@@ -123,16 +121,16 @@ namespace Autofac.Analyzers.Tests
         }
     }";
 
-            var expected = Diagnostic(Descriptors.Autofac1000_DelegateRegistrationNeedsAs)
-                                      .WithLocation(15, 31);
+        var expected = Diagnostic(Descriptors.Autofac1000_DelegateRegistrationNeedsAs)
+                                  .WithLocation(15, 31);
 
-            await Verify(test, expected);
-        }
+        await Verify(test, expected);
+    }
 
-        [Fact]
-        public async Task CanRaiseIssueWithSecondReAssignedBuilder()
-        {
-            var test = @"
+    [Fact]
+    public async Task CanRaiseIssueWithSecondReAssignedBuilder()
+    {
+        var test = @"
     using Autofac;
 
     namespace MyAutofacApp
@@ -157,16 +155,16 @@ namespace Autofac.Analyzers.Tests
         }
     }";
 
-            var expected = Diagnostic(Descriptors.Autofac1000_DelegateRegistrationNeedsAs)
-                                      .WithLocation(19, 27);
+        var expected = Diagnostic(Descriptors.Autofac1000_DelegateRegistrationNeedsAs)
+                                  .WithLocation(19, 27);
 
-            await Verify(test, expected);
-        }
+        await Verify(test, expected);
+    }
 
-        [Fact]
-        public async Task CanTrackReAssignedBuilder()
-        {
-            var test = @"
+    [Fact]
+    public async Task CanTrackReAssignedBuilder()
+    {
+        var test = @"
     using Autofac;
 
     namespace MyAutofacApp
@@ -188,7 +186,6 @@ namespace Autofac.Analyzers.Tests
             }
         }
     }";
-            await Verify(test);
-        }
+        await Verify(test);
     }
 }
